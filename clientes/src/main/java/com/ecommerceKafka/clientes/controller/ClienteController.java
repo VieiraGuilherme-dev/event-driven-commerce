@@ -20,7 +20,7 @@ public class ClienteController {
         return ResponseEntity.ok(cliente);
     }
 
-    @GetMapping
+    @GetMapping("{codigo}")
     public ResponseEntity<Cliente> obterDados(@PathVariable("codigo") Long codigo){
         return service
                 .obterPorCodigo(codigo)
