@@ -28,7 +28,7 @@ public class Pedido {
     @Column(name = "data_pedido", nullable = false)
     private LocalDateTime dataPedido;
 
-    @Column(name = "total", precision = 16, scale = 2)
+    @Column(name = "total", precision = 16, scale = 5)
     private BigDecimal total;
 
     @Column(name = "chave_pagamento")
