@@ -18,3 +18,12 @@ spring:
 
 server:
   port: 8080
+
+# noinspection undefined
+icompras:
+  pedidos:
+    clients:
+      produtos:
+        url: "http://localhost:8081/produtos"
+      clientes:
+        url: "http://localhost:8082/clientes"
