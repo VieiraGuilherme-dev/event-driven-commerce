@@ -3,6 +3,8 @@ package com.ecommerceKafka.pedidos.controller;
 
 import com.ecommerceKafka.pedidos.controller.dto.NovoPedidoDTO;
 import com.ecommerceKafka.pedidos.controller.mappers.PedidoMapper;
+import com.ecommerceKafka.pedidos.model.ErroResposta;
+import com.ecommerceKafka.pedidos.model.exception.ValidationException;
 import com.ecommerceKafka.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,10 +22,15 @@ public class PedidoController {
     private final PedidoMapper mapper;
 
     @PostMapping
-    public ResponseEntity<Long> criar(@RequestBody NovoPedidoDTO dto){
-        var pedido = mapper.map(dto);
-        var novoPedido = service.criarPedido(pedido);
-        return ResponseEntity.ok(novoPedido.getCodigo());
-
+    public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO dto) {
+        try {
+            var pedido = mapper.map(dto);
+            var novoPedido = service.criarPedido(pedido);
+            return ResponseEntity.ok(novoPedido.getCodigo());
+        } catch (ValidationException e) {
+            var erro = new ErroResposta("Erro validação", e.getField(), e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
     }
 }
+

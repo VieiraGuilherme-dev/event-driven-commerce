@@ -7,6 +7,7 @@ import com.ecommerceKafka.pedidos.client.representation.ClienteRepresentation;
 import com.ecommerceKafka.pedidos.client.representation.ProdutoRepresentation;
 import com.ecommerceKafka.pedidos.model.ItemPedido;
 import com.ecommerceKafka.pedidos.model.Pedido;
+import com.ecommerceKafka.pedidos.model.exception.ValidationException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,9 @@ public class PedidoValidator {
             ClienteRepresentation cliente = response.getBody();
             log.info("Cliente de código {} encontrado: {}", cliente.codigo(), cliente.nome());
         } catch (FeignException.NotFound e){
-            throw new IllegalArgumentException("Cliente com código " + codigoCliente + " não encontrado.");
+            var message = String.format("Cliente do código %d não encontrado.", codigoCliente);
+            throw new ValidationException("códigoCliente",message);
+
         }
     }
 
@@ -45,7 +48,8 @@ public class PedidoValidator {
             ProdutoRepresentation produto = response.getBody();
             log.info("Produto de código {} encontrado: {}", produto.codigo(), produto.nome());
         } catch (FeignException.NotFound e){
-            throw new IllegalArgumentException("Produto com código " + item.getCodigoProduto() + " não encontrado.");
+            var message = String.format("Produto de código %d não encontrado.", item.getCodigoProduto());
+            throw new ValidationException("códigoProduto",message);
         }
 
     }
