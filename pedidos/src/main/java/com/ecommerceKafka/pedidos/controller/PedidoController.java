@@ -1,6 +1,7 @@
 package com.ecommerceKafka.pedidos.controller;
 
 
+import com.ecommerceKafka.pedidos.controller.dto.AdicaoNovoPagamentoDTO;
 import com.ecommerceKafka.pedidos.controller.dto.NovoPedidoDTO;
 import com.ecommerceKafka.pedidos.controller.mappers.PedidoMapper;
 import com.ecommerceKafka.pedidos.model.ErroResposta;
@@ -31,6 +32,12 @@ public class PedidoController {
             var erro = new ErroResposta("Erro validação", e.getField(), e.getMessage());
             return ResponseEntity.badRequest().body(erro);
         }
+    }
+
+    @PostMapping("pagamentos")
+    public ResponseEntity<Object> adicionarNovoPagamento(@RequestBody AdicaoNovoPagamentoDTO dto){
+        service.adicionarNovoPagamento(dto.codigoPedido(), dto.dadosCartao(), dto.tipoPagamento());
+        return ResponseEntity.noContent().build();
     }
 }
 
