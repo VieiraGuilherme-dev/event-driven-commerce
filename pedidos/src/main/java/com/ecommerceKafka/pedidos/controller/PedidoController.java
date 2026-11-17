@@ -5,6 +5,7 @@ import com.ecommerceKafka.pedidos.controller.dto.AdicaoNovoPagamentoDTO;
 import com.ecommerceKafka.pedidos.controller.dto.NovoPedidoDTO;
 import com.ecommerceKafka.pedidos.controller.mappers.PedidoMapper;
 import com.ecommerceKafka.pedidos.model.ErroResposta;
+import com.ecommerceKafka.pedidos.model.exception.ItemNaoEncontradoException;
 import com.ecommerceKafka.pedidos.model.exception.ValidationException;
 import com.ecommerceKafka.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +37,13 @@ public class PedidoController {
 
     @PostMapping("pagamentos")
     public ResponseEntity<Object> adicionarNovoPagamento(@RequestBody AdicaoNovoPagamentoDTO dto){
-        service.adicionarNovoPagamento(dto.codigoPedido(), dto.dadosCartao(), dto.tipoPagamento());
-        return ResponseEntity.noContent().build();
+        try{
+            service.adicionarNovoPagamento(dto.codigoPedido(), dto.dadosCartao(), dto.tipoPagamento());
+            return ResponseEntity.noContent().build();
+        }catch (ItemNaoEncontradoException e){
+            var erro = new ErroResposta("Item não encontrado", "codigoPedido", e.getMessage());
+            return ResponseEntity.badRequest().body(erro);
+        }
     }
 }
 

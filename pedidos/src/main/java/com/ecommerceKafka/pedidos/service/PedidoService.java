@@ -6,6 +6,7 @@ import com.ecommerceKafka.pedidos.model.DadosPagamento;
 import com.ecommerceKafka.pedidos.model.Pedido;
 import com.ecommerceKafka.pedidos.model.enums.StatusPedido;
 import com.ecommerceKafka.pedidos.model.enums.TipoPagamento;
+import com.ecommerceKafka.pedidos.model.exception.ItemNaoEncontradoException;
 import com.ecommerceKafka.pedidos.repository.ItemPedidoRepository;
 import com.ecommerceKafka.pedidos.repository.PedidoRepository;
 import com.ecommerceKafka.pedidos.validator.PedidoValidator;
@@ -68,7 +69,7 @@ public class PedidoService {
         var pedidoEncontrado = repository.findById(codigoPedido);
 
         if(pedidoEncontrado.isEmpty()){
-            return;
+            throw new ItemNaoEncontradoException("Pedido não encontrado para o código informado");
         }
 
         var pedido = pedidoEncontrado.get();
