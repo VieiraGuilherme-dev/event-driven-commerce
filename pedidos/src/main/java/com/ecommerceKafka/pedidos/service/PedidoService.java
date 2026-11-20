@@ -1,12 +1,16 @@
 package com.ecommerceKafka.pedidos.service;
 
 
+import com.ecommerceKafka.pedidos.client.ClientesClient;
+import com.ecommerceKafka.pedidos.client.ProdutosClient;
 import com.ecommerceKafka.pedidos.client.ServicoBancarioClient;
 import com.ecommerceKafka.pedidos.model.DadosPagamento;
+import com.ecommerceKafka.pedidos.model.ItemPedido;
 import com.ecommerceKafka.pedidos.model.Pedido;
 import com.ecommerceKafka.pedidos.model.enums.StatusPedido;
 import com.ecommerceKafka.pedidos.model.enums.TipoPagamento;
 import com.ecommerceKafka.pedidos.model.exception.ItemNaoEncontradoException;
+import com.ecommerceKafka.pedidos.publisher.PedidoPublisher;
 import com.ecommerceKafka.pedidos.repository.ItemPedidoRepository;
 import com.ecommerceKafka.pedidos.repository.PedidoRepository;
 import com.ecommerceKafka.pedidos.validator.PedidoValidator;
@@ -14,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +31,9 @@ public class PedidoService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final PedidoValidator validator;
     private final ServicoBancarioClient servicoBancarioClient;
+    private final ClientesClient clientesClient;
+    private final ProdutosClient produtosClient;
+    private final PedidoPublisher pedidoPublisher;
 
     @Transactional
     public Pedido criarPedido(Pedido pedido){
@@ -31,7 +41,6 @@ public class PedidoService {
         realizarPersistencia(pedido);
         enviarSolicitacaoPagamento(pedido);
         return pedido;
-
     }
 
     private void enviarSolicitacaoPagamento(Pedido pedido) {
@@ -56,12 +65,15 @@ public class PedidoService {
         Pedido pedido = pedidoEncontrado.get();
         if(sucess){
             pedido.setStatus(StatusPedido.PAGO);
-
+            repository.save(pedido);
+            var dadosCliente = clientesClient.obterDados(pedido.getCodigoCliente()).getBody();
+            pedido.setDadosCliente(dadosCliente);
+            pedidoPublisher.publicarPedidoPago(pedido);
         }else{
             pedido.setStatus(StatusPedido.ERRO_PAGAMENTO);
             pedido.setObservacoes(observacoes);
+            repository.save(pedido);
         }
-        repository.save(pedido);
     }
 
     @Transactional
@@ -86,6 +98,28 @@ public class PedidoService {
 
         String novaChavePagamento = servicoBancarioClient.solicitarPagamento(pedido);
         pedido.setChavePagamento(novaChavePagamento);
+    }
 
+    public Optional<Pedido> carregarDadosCompletosPedido(Long codigo) {
+        Optional<Pedido> pedido = repository.findById(codigo);
+        pedido.ifPresent(this::carregarDadosCliente);
+        pedido.ifPresent(this::carregarItensPedido);
+        return pedido;
+    }
+
+    private void carregarDadosCliente(Pedido pedido) {
+        var dadosCliente = clientesClient.obterDados(pedido.getCodigoCliente()).getBody();
+        pedido.setDadosCliente(dadosCliente);
+    }
+
+    private void carregarItensPedido(Pedido pedido) {
+        List<ItemPedido> itens = itemPedidoRepository.findByPedido(pedido);
+        pedido.setItens(itens);
+        pedido.getItens().forEach(this::carregarDadosProduto);
+    }
+
+    private void carregarDadosProduto(ItemPedido item) {
+        var produto = produtosClient.obterDados(item.getCodigoProduto()).getBody();
+        item.setNome(produto.nome());
     }
 }

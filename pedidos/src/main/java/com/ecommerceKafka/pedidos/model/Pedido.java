@@ -1,6 +1,7 @@
 package com.ecommerceKafka.pedidos.model;
 
 
+import com.ecommerceKafka.pedidos.client.representation.ClienteRepresentation;
 import com.ecommerceKafka.pedidos.model.enums.StatusPedido;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -52,4 +53,7 @@ public class Pedido {
 
     @OneToMany(mappedBy = "pedido")
     private List<ItemPedido> itens;
+
+    @Transient
+    private ClienteRepresentation dadosCliente;
 }

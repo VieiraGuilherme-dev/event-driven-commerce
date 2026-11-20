@@ -7,13 +7,12 @@ import com.ecommerceKafka.pedidos.controller.mappers.PedidoMapper;
 import com.ecommerceKafka.pedidos.model.ErroResposta;
 import com.ecommerceKafka.pedidos.model.exception.ItemNaoEncontradoException;
 import com.ecommerceKafka.pedidos.model.exception.ValidationException;
+import com.ecommerceKafka.pedidos.publisher.DetalhesPedidoMapper;
+import com.ecommerceKafka.pedidos.publisher.representation.DetalhePedidoRepresentation;
 import com.ecommerceKafka.pedidos.service.PedidoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/pedidos")
@@ -22,6 +21,7 @@ public class PedidoController {
 
     private final PedidoService service;
     private final PedidoMapper mapper;
+    private final DetalhesPedidoMapper pedidoMapper;
 
     @PostMapping
     public ResponseEntity<Object> criar(@RequestBody NovoPedidoDTO dto) {
@@ -44,6 +44,15 @@ public class PedidoController {
             var erro = new ErroResposta("Item não encontrado", "codigoPedido", e.getMessage());
             return ResponseEntity.badRequest().body(erro);
         }
+    }
+
+    @GetMapping("{codigo}")
+    public ResponseEntity<DetalhePedidoRepresentation> obterDetalhesPedido(@PathVariable Long codigo){
+        return service
+                .carregarDadosCompletosPedido(codigo)
+                .map(pedidoMapper::map)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }
 

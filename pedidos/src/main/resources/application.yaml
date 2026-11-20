@@ -17,7 +17,7 @@ spring:
         format_sql: true
 
 server:
-  port: 8080
+  port: 8085
 
 # noinspection undefined
 icompras:
@@ -30,7 +30,7 @@ icompras:
 
   config:
     kafka:
-      server-url: 'http://localhost:29092'
+      server-url: 'localhost:29092'
       topics:
         pedidos-pagos: 'icompras.pedidos-pagos'
         pedidos-faturados: 'icompras.pedidos-faturados'
